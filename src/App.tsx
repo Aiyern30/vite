@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useRef } from "react";
-import { Heart, X, RotateCcw } from "lucide-react";
+import { Heart, X, RotateCcw, Settings } from "lucide-react";
 
 interface Cat {
   id: number;
   url: string;
   liked: boolean;
+  tags?: string[];
 }
 
 interface DragPosition {
@@ -15,15 +16,43 @@ interface DragPosition {
 type SwipeDirection = "left" | "right" | null;
 
 const CatSwipeApp: React.FC = () => {
-  // Generate cats once using useMemo instead of useEffect
+  // Generate cats with various tags
+  const catTags = useMemo(
+    () => [
+      "cute",
+      "sleeping",
+      "funny",
+      "grumpy",
+      "kitten",
+      "orange",
+      "black",
+      "white",
+      "fluffy",
+      "playful",
+      "lazy",
+      "angry",
+      "happy",
+      "curious",
+      "scared",
+    ],
+    []
+  );
+
+  const [selectedTags, setSelectedTags] = useState<string[]>(catTags);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [tempSelectedTags, setTempSelectedTags] = useState<string[]>(catTags);
+
   const cats = useMemo<Cat[]>(
     () =>
-      Array.from({ length: 15 }, (_, i) => ({
-        id: i,
-        url: `https://cataas.com/cat?${i}`,
-        liked: false,
-      })),
-    []
+      selectedTags.flatMap((tag, i) =>
+        Array.from({ length: 1 }, (_, j) => ({
+          id: i * 10 + j,
+          url: `https://cataas.com/cat/${tag}?${i}_${j}`,
+          liked: false,
+          tags: [tag],
+        }))
+      ),
+    [selectedTags]
   );
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -106,8 +135,94 @@ const CatSwipeApp: React.FC = () => {
     setSwipeDirection(null);
   };
 
+  const handleOpenSettings = (): void => {
+    setTempSelectedTags(selectedTags);
+    setShowSettings(true);
+  };
+
+  const handleCloseSettings = (): void => {
+    setShowSettings(false);
+  };
+
+  const handleToggleTag = (tag: string): void => {
+    setTempSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleSaveSettings = (): void => {
+    if (tempSelectedTags.length === 0) {
+      alert("Please select at least one tag!");
+      return;
+    }
+    setSelectedTags(tempSelectedTags);
+    setCurrentIndex(0);
+    setLikedCats([]);
+    setShowResults(false);
+    setDragOffset({ x: 0, y: 0 });
+    setSwipeDirection(null);
+    setShowSettings(false);
+  };
+
   const rotation = dragOffset.x * 0.1;
   const opacity = 1 - Math.abs(dragOffset.x) / 200;
+
+  // Settings Modal
+  if (showSettings) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">
+              Filter Cat Tags 🏷️
+            </h2>
+            <button
+              onClick={handleCloseSettings}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <p className="text-gray-600 mb-6">
+            Select the types of cats you want to see ({tempSelectedTags.length}{" "}
+            selected)
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-96 overflow-y-auto">
+            {catTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleToggleTag(tag)}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  tempSelectedTags.includes(tag)
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={handleCloseSettings}
+              className="flex-1 bg-gray-200 text-gray-700 font-semibold py-4 rounded-2xl hover:bg-gray-300 transition-all duration-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveSettings}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-4 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Save & Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showResults) {
     return (
@@ -145,6 +260,11 @@ const CatSwipeApp: React.FC = () => {
                   <div className="absolute top-2 right-2 bg-pink-500 rounded-full p-2">
                     <Heart className="w-4 h-4 text-white fill-current" />
                   </div>
+                  {cat.tags && cat.tags.length > 0 && (
+                    <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+                      #{cat.tags[0]}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -174,9 +294,18 @@ const CatSwipeApp: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8 animate-fadeIn">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Paws & Preferences 🐾
-          </h1>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h1 className="text-4xl font-bold text-gray-800">
+              Paws & Preferences 🐾
+            </h1>
+            <button
+              onClick={handleOpenSettings}
+              className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
           <p className="text-gray-600">Swipe right to like, left to pass</p>
           <div className="mt-4 text-sm text-gray-500">
             {currentIndex + 1} / {cats.length}
@@ -239,10 +368,18 @@ const CatSwipeApp: React.FC = () => {
                   className="w-full h-full object-cover pointer-events-none"
                   draggable="false"
                   onError={(e) => {
-                    // Fallback to a different cat image if one fails to load
                     e.currentTarget.src = `https://cataas.com/cat?${Date.now()}`;
                   }}
                 />
+
+                {/* Cat tag badge */}
+                {currentCat.tags &&
+                  currentCat.tags.length > 0 &&
+                  !swipeDirection && (
+                    <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium animate-fadeIn">
+                      #{currentCat.tags[0]}
+                    </div>
+                  )}
 
                 {/* Swipe indicators */}
                 {swipeDirection === "right" && (
