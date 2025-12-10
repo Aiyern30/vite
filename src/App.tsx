@@ -34,6 +34,21 @@ const CatSwipeApp: React.FC = () => {
       "happy",
       "curious",
       "scared",
+      "sassy",
+      "majestic",
+      "tiny",
+      "big",
+      "striped",
+      "spotted",
+      "longhair",
+      "shorthair",
+      "mischievous",
+      "friendly",
+      "wild",
+      "domestic",
+      "bossy",
+      "hungry",
+      "adventurous",
     ],
     []
   );
@@ -192,16 +207,17 @@ const CatSwipeApp: React.FC = () => {
             selected)
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-96 overflow-y-auto p-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-96 overflow-y-auto overflow-x-hidden w-full">
             {catTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => handleToggleTag(tag)}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 transform-gpu ${
                   tempSelectedTags.includes(tag)
                     ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-100 hover:scale-105"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105"
                 }`}
+                style={{ maxWidth: "100%" }}
               >
                 #{tag}
               </button>
