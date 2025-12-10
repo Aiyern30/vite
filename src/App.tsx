@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
-import { Heart, X, RotateCcw } from "lucide-react";
+import { Heart, X, RotateCcw, Loader2 } from "lucide-react";
 
 interface Cat {
   id: number;
@@ -33,15 +33,18 @@ const CatSwipeApp: React.FC = () => {
   const [dragOffset, setDragOffset] = useState<DragPosition>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection>(null);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [imageLoading, setImageLoading] = useState<boolean>(true);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = (clientX: number, clientY: number): void => {
+    if (isAnimating) return;
     setIsDragging(true);
     setDragStart({ x: clientX, y: clientY });
   };
 
   const handleDragMove = (clientX: number, clientY: number): void => {
-    if (!isDragging) return;
+    if (!isDragging || isAnimating) return;
 
     const deltaX = clientX - dragStart.x;
     const deltaY = clientY - dragStart.y;
@@ -55,7 +58,7 @@ const CatSwipeApp: React.FC = () => {
   };
 
   const handleDragEnd = (): void => {
-    if (!isDragging) return;
+    if (!isDragging || isAnimating) return;
     setIsDragging(false);
 
     if (Math.abs(dragOffset.x) > 100) {
@@ -71,31 +74,35 @@ const CatSwipeApp: React.FC = () => {
   };
 
   const handleLike = (): void => {
-    if (currentIndex >= cats.length) return;
+    if (currentIndex >= cats.length || isAnimating) return;
 
     setLikedCats([...likedCats, cats[currentIndex]]);
     animateSwipe("right");
   };
 
   const handleDislike = (): void => {
-    if (currentIndex >= cats.length) return;
+    if (currentIndex >= cats.length || isAnimating) return;
     animateSwipe("left");
   };
 
   const animateSwipe = (direction: "left" | "right"): void => {
+    setIsAnimating(true);
     setSwipeDirection(direction);
     setDragOffset({ x: direction === "right" ? 1000 : -1000, y: 0 });
 
+    // Wait 2 seconds before showing next card
     setTimeout(() => {
       const nextIndex = currentIndex + 1;
       if (nextIndex >= cats.length) {
         setShowResults(true);
       } else {
         setCurrentIndex(nextIndex);
+        setImageLoading(true);
       }
       setDragOffset({ x: 0, y: 0 });
       setSwipeDirection(null);
-    }, 300);
+      setIsAnimating(false);
+    }, 2000);
   };
 
   const handleReset = (): void => {
@@ -104,6 +111,8 @@ const CatSwipeApp: React.FC = () => {
     setShowResults(false);
     setDragOffset({ x: 0, y: 0 });
     setSwipeDirection(null);
+    setIsAnimating(false);
+    setImageLoading(true);
   };
 
   const rotation = dragOffset.x * 0.1;
@@ -183,7 +192,7 @@ const CatSwipeApp: React.FC = () => {
         {/* Card Stack */}
         <div className="relative w-full aspect-[3/4] mb-8">
           {/* Background cards for depth */}
-          {currentIndex + 1 < cats.length && (
+          {currentIndex + 1 < cats.length && !isAnimating && (
             <div
               className="absolute inset-0 bg-white rounded-3xl shadow-xl"
               style={{
@@ -193,7 +202,7 @@ const CatSwipeApp: React.FC = () => {
               }}
             />
           )}
-          {currentIndex + 2 < cats.length && (
+          {currentIndex + 2 < cats.length && !isAnimating && (
             <div
               className="absolute inset-0 bg-white rounded-3xl shadow-xl"
               style={{
@@ -208,7 +217,9 @@ const CatSwipeApp: React.FC = () => {
           {currentCat && (
             <div
               ref={cardRef}
-              className="absolute inset-0 cursor-grab active:cursor-grabbing"
+              className={`absolute inset-0 ${
+                !isAnimating ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+              }`}
               style={{
                 transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
                 opacity: opacity,
@@ -230,23 +241,32 @@ const CatSwipeApp: React.FC = () => {
               onTouchEnd={handleDragEnd}
             >
               <div className="relative h-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+                {/* Loading spinner */}
+                {imageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                    <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+                  </div>
+                )}
+
                 <img
                   src={currentCat.url}
                   alt="Cat"
                   className="w-full h-full object-cover pointer-events-none select-none"
                   draggable="false"
+                  onLoad={() => setImageLoading(false)}
+                  style={{ opacity: imageLoading ? 0 : 1 }}
                 />
 
                 {/* Swipe indicators */}
                 {swipeDirection === "right" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-green-500/20">
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 z-20">
                     <div className="bg-green-500 text-white px-8 py-4 rounded-2xl font-bold text-2xl rotate-12 animate-pulse">
                       LIKE
                     </div>
                   </div>
                 )}
                 {swipeDirection === "left" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-red-500/20">
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 z-20">
                     <div className="bg-red-500 text-white px-8 py-4 rounded-2xl font-bold text-2xl -rotate-12 animate-pulse">
                       NOPE
                     </div>
@@ -261,16 +281,16 @@ const CatSwipeApp: React.FC = () => {
         <div className="flex justify-center gap-6 animate-fadeIn">
           <button
             onClick={handleDislike}
-            className="group bg-white rounded-full p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
-            disabled={currentIndex >= cats.length}
+            className="group bg-white rounded-full p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            disabled={currentIndex >= cats.length || isAnimating}
           >
             <X className="w-8 h-8 text-red-500 group-hover:text-red-600 transition-colors" />
           </button>
 
           <button
             onClick={handleLike}
-            className="group bg-white rounded-full p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
-            disabled={currentIndex >= cats.length}
+            className="group bg-white rounded-full p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            disabled={currentIndex >= cats.length || isAnimating}
           >
             <Heart className="w-8 h-8 text-pink-500 group-hover:text-pink-600 transition-colors" />
           </button>
