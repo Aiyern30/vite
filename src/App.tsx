@@ -42,18 +42,21 @@ const CatSwipeApp: React.FC = () => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [tempSelectedTags, setTempSelectedTags] = useState<string[]>(catTags);
 
-  const cats = useMemo<Cat[]>(
-    () =>
-      selectedTags.flatMap((tag, i) =>
-        Array.from({ length: 1 }, (_, j) => ({
-          id: i * 10 + j,
-          url: `https://cataas.com/cat/${tag}?${i}_${j}`,
-          liked: false,
-          tags: [tag],
-        }))
-      ),
-    [selectedTags]
-  );
+  const cats = useMemo<Cat[]>(() => {
+    const totalImages = 15;
+    const imagesPerTag = Math.floor(totalImages / selectedTags.length);
+    const remainder = totalImages % selectedTags.length;
+
+    return selectedTags.flatMap((tag, i) => {
+      const count = i < remainder ? imagesPerTag + 1 : imagesPerTag;
+      return Array.from({ length: count }, (_, j) => ({
+        id: i * 10 + j,
+        url: `https://cataas.com/cat/${tag}?${i}_${j}_${Date.now()}`,
+        liked: false,
+        tags: [tag],
+      }));
+    });
+  }, [selectedTags]);
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [likedCats, setLikedCats] = useState<Cat[]>([]);
@@ -171,7 +174,7 @@ const CatSwipeApp: React.FC = () => {
   if (showSettings) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
-        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
+        <div className="max-w-2xl w-full mx-auto bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
               Filter Cat Tags 🏷️
@@ -189,15 +192,15 @@ const CatSwipeApp: React.FC = () => {
             selected)
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-96 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-96 overflow-y-auto p-1">
             {catTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => handleToggleTag(tag)}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   tempSelectedTags.includes(tag)
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-100 hover:scale-105"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105"
                 }`}
               >
                 #{tag}
@@ -214,7 +217,7 @@ const CatSwipeApp: React.FC = () => {
             </button>
             <button
               onClick={handleSaveSettings}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-4 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-4 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg"
             >
               Save & Apply
             </button>
@@ -226,8 +229,8 @@ const CatSwipeApp: React.FC = () => {
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
+        <div className="max-w-2xl w-full mx-auto bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-800 mb-2">
               Your Results! 🎉
@@ -290,7 +293,7 @@ const CatSwipeApp: React.FC = () => {
   const currentCat = cats[currentIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8 animate-fadeIn">
