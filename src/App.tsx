@@ -167,8 +167,8 @@ const CatSwipeApp: React.FC = () => {
   const currentCat = cats[currentIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex flex-col items-center justify-center overflow-x-hidden">
-      <div className="max-w-md w-full mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
+      <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
