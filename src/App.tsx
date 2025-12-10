@@ -111,8 +111,8 @@ const CatSwipeApp: React.FC = () => {
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex items-center justify-center overflow-x-hidden">
+        <div className="max-w-2xl w-full mx-auto bg-white rounded-3xl shadow-2xl p-8 animate-fadeIn">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-800 mb-2">
               Your Results! 🎉
@@ -167,8 +167,8 @@ const CatSwipeApp: React.FC = () => {
   const currentCat = cats[currentIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex flex-col items-center justify-center">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 flex flex-col items-center justify-center overflow-x-hidden">
+      <div className="max-w-md w-full mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
@@ -181,7 +181,7 @@ const CatSwipeApp: React.FC = () => {
         </div>
 
         {/* Card Stack */}
-        <div className="relative h-[500px] mb-8">
+        <div className="relative w-full aspect-[3/4] mb-8">
           {/* Background cards for depth */}
           {currentIndex + 1 < cats.length && (
             <div
@@ -233,7 +233,7 @@ const CatSwipeApp: React.FC = () => {
                 <img
                   src={currentCat.url}
                   alt="Cat"
-                  className="w-full h-full object-cover pointer-events-none"
+                  className="w-full h-full object-cover pointer-events-none select-none"
                   draggable="false"
                 />
 
@@ -290,6 +290,9 @@ const CatSwipeApp: React.FC = () => {
         }
         .animate-fadeIn {
           animation: fadeIn 0.6s ease-out;
+        }
+        body {
+          overflow-x: hidden;
         }
       `}</style>
     </div>
